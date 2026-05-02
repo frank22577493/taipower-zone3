@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>電網轉骨 — ZONE 3 · 電智流 2026</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg:#0c1a2e; --panel:#132338; --panel2:#172a44;
+  --border:#1e3a5f; --blue:#4db8e8; --green:#3dd68c;
+  --gold:#f5c842; --teal:#00d4b4; --dim:#5a7a9a; --text:#d8eaf8;
+  --correct:#3dd68c; --wrong:#ff5566; --neutral:#4db8e8;
+}
+body {
+  background:var(--bg); color:var(--text);
+  font-family:'Microsoft JhengHei','PingFang TC',sans-serif;
+  min-height:100vh; overflow-x:hidden;
+}
+body::after {
+  content:''; position:fixed; inset:0;
+  background:radial-gradient(ellipse at 50% 0%, rgba(77,184,232,0.04) 0%, transparent 60%);
+  pointer-events:none; z-index:0;
+}
+
+/* ── SCREENS ── */
+.screen { display:none; min-height:100vh; position:relative; z-index:1; }
+.screen.active { display:flex; }
+
+/* ── LANG TOGGLE ── */
+#lang-btn {
+  position:fixed; top:16px; right:16px; z-index:9999;
+  display:flex; align-items:center;
+  background:rgba(19,35,56,0.9); border:1px solid var(--border);
+  border-radius:20px; overflow:hidden; backdrop-filter:blur(8px);
+}
+.lang-opt {
+  padding:6px 14px; font-size:12px; letter-spacing:2px;
+  cursor:pointer; color:var(--dim); transition:all 0.2s;
+  font-family:inherit; background:transparent; border:none;
+}
+.lang-opt.active { background:var(--blue); color:#000; font-weight:700; }
+.lang-opt:hover:not(.active) { color:var(--text); }
+
+#lang-wip {
+  display:none; position:fixed; inset:0; z-index:10000;
+  background:rgba(12,26,46,0.9); align-items:center; justify-content:center;
+  flex-direction:column; backdrop-filter:blur(4px);
+}
+#lang-wip.show { display:flex; }
+.wip-box {
+  background:var(--panel); border:1px solid var(--blue);
+  border-radius:12px; padding:32px 48px; text-align:center; max-width:360px;
+}
+.wip-icon { font-size:40px; margin-bottom:12px; }
+.wip-title { font-size:20px; font-weight:900; color:var(--blue); margin-bottom:8px; }
+.wip-sub { font-size:14px; color:var(--dim); line-height:1.8; }
+.wip-close {
+  margin-top:20px; background:transparent; border:1px solid var(--blue);
+  color:var(--blue); padding:8px 32px; border-radius:20px;
+  cursor:pointer; font-family:inherit; font-size:13px; letter-spacing:2px;
+}
+.wip-close:hover { background:var(--blue); color:#000; }
+
+/* ── IDLE HINT ── */
+#idle-hint {
+  display:none; position:fixed; bottom:32px; left:50%; transform:translateX(-50%);
+  z-index:8888; background:rgba(19,35,56,0.95); border:1px solid var(--blue);
+  border-radius:24px; padding:12px 28px; font-size:14px; color:var(--blue);
+  letter-spacing:1px; backdrop-filter:blur(8px);
+  animation:hintpulse 2s ease-in-out infinite;
+}
+#idle-hint.show { display:block; }
+@keyframes hintpulse { 0%,100%{opacity:0.7} 50%{opacity:1} }
+
+/* ── INTRO ── */
+#s-intro {
+  flex-direction:column; align-items:center; justify-content:center;
+  padding:40px 20px; text-align:center; gap:0;
+}
+.intro-reveal {
+  display:flex; flex-direction:column; align-items:center; gap:20px;
+  margin-bottom:40px;
+}
+.reveal-label { font-size:11px; letter-spacing:6px; color:var(--dim); }
+.reveal-qmark {
+  font-size:80px; color:var(--blue); opacity:0;
+  animation:qreveal 1.2s ease forwards 0.3s;
+  text-shadow:0 0 40px rgba(77,184,232,0.6);
+}
+@keyframes qreveal {
+  0%{opacity:0;transform:scale(0.5) rotate(-10deg)}
+  60%{transform:scale(1.15) rotate(3deg)}
+  100%{opacity:1;transform:scale(1) rotate(0deg)}
+}
+.reveal-lines { display:flex; flex-direction:column; gap:8px; }
+.reveal-line {
+  font-size:clamp(15px,2vw,20px); color:var(--text); opacity:0;
+  border-left:3px solid var(--teal); padding-left:16px; text-align:left;
+}
+.reveal-line:nth-child(1){animation:fadein 0.5s ease forwards 1.0s}
+.reveal-line:nth-child(2){animation:fadein 0.5s ease forwards 1.6s}
+.reveal-line:nth-child(3){animation:fadein 0.5s ease forwards 2.2s}
+.reveal-line strong { color:var(--gold); }
+.reveal-conclusion {
+  font-size:clamp(18px,2.5vw,26px); font-weight:900; color:var(--teal);
+  opacity:0; animation:fadein 0.6s ease forwards 3.0s; letter-spacing:2px;
+}
+@keyframes fadein{0%{opacity:0;transform:translateX(-10px)}100%{opacity:1;transform:none}}
+
+.intro-zone { font-size:11px; letter-spacing:6px; color:var(--dim); margin-bottom:12px; }
+.intro-title {
+  font-size:clamp(48px,9vw,90px); font-weight:900; color:var(--blue);
+  line-height:1; letter-spacing:-2px;
+  text-shadow:0 0 50px rgba(77,184,232,0.35); margin-bottom:6px;
+}
+.intro-en { font-size:clamp(12px,1.8vw,16px); color:var(--teal); letter-spacing:6px; margin-bottom:32px; }
+.intro-body { max-width:520px; font-size:15px; line-height:2; color:var(--text); margin-bottom:36px; }
+.intro-body strong { color:var(--gold); }
+.btn-main {
+  background:transparent; border:2px solid var(--blue); color:var(--blue);
+  font-size:15px; letter-spacing:4px; padding:14px 60px;
+  cursor:pointer; font-family:inherit; transition:all 0.2s; border-radius:2px;
+  opacity:0; animation:fadein 0.6s ease forwards 3.6s;
+}
+.btn-main:hover { background:var(--blue); color:#000; box-shadow:0 0 30px rgba(77,184,232,0.4); }
+
+
+/* ── QCARD (clickable ? on intro) ── */
+.qcard {
+  background:var(--panel); border:2px solid var(--blue);
+  border-radius:16px; padding:32px 48px; cursor:pointer;
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+  transition:all 0.3s; max-width:320px;
+  box-shadow:0 0 40px rgba(77,184,232,0.15);
+  animation:qpulse 3s ease-in-out infinite;
+}
+.qcard:hover { border-color:var(--teal); box-shadow:0 0 60px rgba(77,184,232,0.35); transform:translateY(-4px); }
+@keyframes qpulse { 0%,100%{box-shadow:0 0 30px rgba(77,184,232,0.15)} 50%{box-shadow:0 0 60px rgba(77,184,232,0.35)} }
+.qcard-label { font-size:10px; letter-spacing:5px; color:var(--dim); }
+.qcard-q { font-size:80px; color:var(--blue); text-shadow:0 0 40px rgba(77,184,232,0.7); line-height:1; }
+.qcard-tap { font-size:12px; letter-spacing:3px; color:var(--teal); }
+
+/* ── REVEAL MODAL ── */
+.rmodal-overlay {
+  display:none; position:fixed; inset:0; z-index:9990;
+  background:rgba(8,16,30,0.92); backdrop-filter:blur(8px);
+  align-items:center; justify-content:center;
+}
+.rmodal-overlay.show { display:flex; }
+.rmodal-card {
+  background:var(--panel); border:1px solid var(--blue);
+  border-radius:20px; padding:40px 40px 32px; max-width:440px; width:90%;
+  display:flex; flex-direction:column; align-items:center; gap:16px;
+  text-align:center; position:relative;
+  box-shadow:0 0 80px rgba(77,184,232,0.2);
+}
+.rmodal-step { display:none; flex-direction:column; align-items:center; gap:12px; width:100%; }
+.rmodal-step.active { display:flex; animation:slidein 0.35s ease; }
+@keyframes slidein { 0%{opacity:0;transform:translateY(12px)} 100%{opacity:1;transform:none} }
+.rmodal-num { font-size:10px; letter-spacing:5px; color:var(--dim); }
+.rmodal-icon { font-size:52px; line-height:1; }
+.rmodal-head { font-size:11px; letter-spacing:6px; color:var(--dim); }
+.rmodal-title { font-size:clamp(20px,3vw,28px); font-weight:900; color:var(--text); line-height:1.3; }
+.rmodal-gold { color:var(--gold); }
+.rmodal-body { font-size:14px; color:var(--dim); line-height:1.9; max-width:340px; }
+.rmodal-conclusion { font-size:clamp(22px,4vw,32px); font-weight:900; color:var(--teal); letter-spacing:2px; }
+.rmodal-btn {
+  margin-top:8px; background:transparent; border:1.5px solid var(--blue);
+  color:var(--blue); font-size:14px; letter-spacing:3px; padding:12px 40px;
+  border-radius:2px; cursor:pointer; font-family:inherit; transition:all 0.2s;
+}
+.rmodal-btn:hover { background:var(--blue); color:#000; }
+.rmodal-btn-go { border-color:var(--teal); color:var(--teal); font-size:16px; padding:14px 56px; }
+.rmodal-btn-go:hover { background:var(--teal); color:#000; }
+.rmodal-dots { display:flex; gap:8px; margin-top:8px; }
+.rdot { width:8px; height:8px; border-radius:50%; background:var(--border); transition:all 0.3s; }
+.rdot.active { background:var(--blue); transform:scale(1.3); }
+
+/* ── POC SCREEN ── */
+#s-poc {
+  flex-direction:column; align-items:center; justify-content:center;
+  padding:40px 24px; gap:24px; text-align:center;
+}
+.poc-label { font-size:10px; letter-spacing:6px; color:var(--dim); }
+.poc-title { font-size:clamp(22px,3.5vw,36px); font-weight:900; color:var(--blue); line-height:1.3; }
+.poc-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; max-width:820px; width:100%; }
+.poc-card {
+  background:var(--panel); border:1px solid var(--border);
+  border-radius:12px; padding:24px 16px; text-align:left; position:relative; overflow:hidden;
+}
+.poc-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+.poc-card:nth-child(1)::before { background:var(--gold); }
+.poc-card:nth-child(2)::before { background:var(--blue); }
+.poc-card:nth-child(3)::before { background:var(--green); }
+.poc-num { font-size:10px; letter-spacing:4px; color:var(--dim); margin-bottom:8px; }
+.poc-topic { font-size:11px; letter-spacing:3px; color:var(--teal); margin-bottom:8px; }
+.poc-answer { font-size:16px; font-weight:900; color:var(--text); line-height:1.4; margin-bottom:6px; }
+.poc-answer span { font-size:12px; font-weight:400; color:var(--dim); }
+.poc-result { font-size:13px; color:var(--green); margin-top:8px; border-top:1px solid var(--border); padding-top:8px; }
+.poc-quote {
+  max-width:600px; background:rgba(77,184,232,0.06);
+  border-left:3px solid var(--blue); border-radius:0 8px 8px 0;
+  padding:16px 24px; text-align:left; font-size:15px; color:var(--text); line-height:1.8;
+}
+.poc-quote span { font-size:12px; color:var(--dim); display:block; margin-top:6px; }
+
+/* ── INSTRUCTIONS ── */
+#s-instructions {
+  flex-direction:column; align-items:center; justify-content:center;
+  padding:36px 24px; gap:20px; text-align:center;
+}
+.ins-zone { font-size:11px; letter-spacing:5px; color:var(--dim); }
+.ins-title { font-size:clamp(20px,3vw,30px); font-weight:900; color:var(--blue); margin-top:4px; }
+.ins-steps { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; max-width:820px; width:100%; }
+.ins-step {
+  background:var(--panel); border:1px solid var(--border);
+  border-radius:10px; padding:20px 16px; text-align:left; position:relative; overflow:hidden;
+}
+.ins-step::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+.ins-step:nth-child(1)::before { background:var(--gold); }
+.ins-step:nth-child(2)::before { background:var(--blue); }
+.ins-step:nth-child(3)::before { background:var(--green); }
+.ins-num { font-size:10px; letter-spacing:4px; color:var(--dim); }
+.ins-icon { font-size:28px; margin:8px 0; }
+.ins-name { font-size:15px; font-weight:bold; color:var(--text); }
+.ins-en { font-size:10px; letter-spacing:3px; color:var(--dim); margin-top:-4px; margin-bottom:8px; }
+.ins-desc { font-size:12px; color:var(--dim); line-height:1.75; }
+.ins-desc strong { color:var(--text); }
+.ins-note {
+  background:rgba(77,184,232,0.07); border:1px solid rgba(77,184,232,0.2);
+  border-radius:6px; padding:12px 20px; max-width:680px; width:100%;
+  font-size:13px; color:var(--blue); line-height:1.7;
+}
+.ins-note strong { color:#fff; }
+
+/* ── STEP COMMON ── */
+.step-wrap {
+  flex-direction:column; align-items:center; justify-content:center;
+  padding:32px 20px; gap:24px;
+}
+.step-header { text-align:center; }
+.step-num { font-size:11px; letter-spacing:5px; color:var(--dim); margin-bottom:4px; }
+.step-title { font-size:clamp(22px,3.5vw,34px); font-weight:900; color:var(--blue); }
+.step-desc { font-size:14px; color:var(--dim); margin-top:6px; line-height:1.6; max-width:560px; }
+
+/* ── STEP 1: TIME ── */
+.timeline-wrap { width:100%; max-width:760px; }
+.timeline-label {
+  display:flex; justify-content:space-between;
+  font-size:11px; color:var(--dim); margin-bottom:8px; padding:0 4px;
+}
+.timeline-bar {
+  height:4px; background:var(--border); border-radius:2px;
+  position:relative; margin-bottom:24px;
+}
+.timeline-demand {
+  position:absolute; top:-1px; left:0; height:6px; border-radius:2px;
+  background:linear-gradient(90deg,var(--blue),var(--gold),var(--wrong));
+  animation:demandgrow 2s ease forwards;
+}
+@keyframes demandgrow { 0%{width:0} 100%{width:100%} }
+
+.time-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; max-width:760px; width:100%; }
+.time-card {
+  background:var(--panel); border:2px solid var(--border);
+  border-radius:12px; padding:22px 16px; text-align:center;
+  cursor:pointer; transition:all 0.2s; position:relative; overflow:hidden;
+}
+.time-card:hover { border-color:var(--blue); transform:translateY(-2px); }
+.time-card.selected { border-color:var(--green); background:rgba(61,214,140,0.08); }
+.time-card.idle-glow { animation:cardglow 1.5s ease-in-out infinite; }
+@keyframes cardglow { 0%,100%{box-shadow:none} 50%{box-shadow:0 0 18px rgba(77,184,232,0.4)} }
+.time-year { font-size:28px; font-weight:900; color:var(--gold); margin-bottom:8px; }
+.time-icon { font-size:24px; margin-bottom:8px; }
+.time-name { font-size:14px; font-weight:bold; color:var(--text); margin-bottom:4px; }
+.time-sub { font-size:12px; color:var(--dim); line-height:1.5; }
+.time-tag {
+  display:inline-block; margin-top:10px; padding:3px 10px; border-radius:10px; font-size:10px; letter-spacing:1px;
+}
+.tag-good { background:rgba(61,214,140,0.15); color:var(--green); }
+.tag-mid { background:rgba(245,200,66,0.15); color:var(--gold); }
+.tag-risk { background:rgba(255,85,102,0.15); color:var(--wrong); }
+
+/* ── STEP 2: LOCATION ── */
+.map-wrap { display:flex; gap:24px; align-items:center; max-width:820px; width:100%; }
+.taiwan-map-box { flex-shrink:0; position:relative; }
+.taiwan-svg { width:220px; height:320px; }
+.location-dot {
+  cursor:pointer; transition:all 0.2s;
+}
+.location-dot circle { transition:all 0.2s; }
+.location-dot:hover circle { r:14; }
+.location-dot.selected circle { fill:var(--green) !important; r:16; }
+.location-dot.idle-glow circle { animation:dotglow 1.5s ease-in-out infinite; }
+@keyframes dotglow { 0%,100%{opacity:0.7} 50%{opacity:1;filter:drop-shadow(0 0 6px var(--blue))} }
+
+.location-cards { display:flex; flex-direction:column; gap:10px; flex:1; }
+.loc-card {
+  background:var(--panel); border:2px solid var(--border);
+  border-radius:10px; padding:16px 18px; cursor:pointer; transition:all 0.2s;
+}
+.loc-card:hover { border-color:var(--blue); }
+.loc-card.selected { border-color:var(--green); background:rgba(61,214,140,0.07); }
+.loc-card.idle-glow { animation:cardglow 1.5s ease-in-out infinite; }
+.loc-name { font-size:15px; font-weight:bold; color:var(--text); margin-bottom:6px; }
+.loc-stats { display:flex; gap:8px; flex-wrap:wrap; }
+.loc-stat { font-size:11px; padding:2px 8px; border-radius:8px; background:rgba(255,255,255,0.05); color:var(--dim); }
+.loc-stat.good { color:var(--green); background:rgba(61,214,140,0.1); }
+.loc-stat.ok { color:var(--gold); background:rgba(245,200,66,0.1); }
+.loc-stat.bad { color:var(--wrong); background:rgba(255,85,102,0.1); }
+
+/* ── STEP 3: POWER COUPLE ── */
+.couple-wrap { display:flex; flex-direction:column; align-items:center; gap:16px; max-width:820px; width:100%; }
+.couple-grid { display:grid; grid-template-columns:1fr auto 1fr; gap:0; width:100%; align-items:start; }
+.couple-col-label { font-size:11px; letter-spacing:4px; color:var(--dim); text-align:center; margin-bottom:10px; }
+.couple-col { display:flex; flex-direction:column; gap:8px; }
+.couple-center { display:flex; flex-direction:column; justify-content:space-around; padding:0 16px; min-height:320px; }
+.conn-line-svg { width:60px; height:100%; }
+
+.ind-card, .eng-card {
+  background:var(--panel); border:2px solid var(--border);
+  border-radius:10px; padding:12px 14px; cursor:pointer;
+  transition:all 0.2s; display:flex; align-items:center; gap:10px;
+}
+.ind-card:hover, .eng-card:hover { border-color:var(--blue); }
+.ind-card.selected, .eng-card.selected { border-color:var(--blue); background:rgba(77,184,232,0.1); }
+.ind-card.matched, .eng-card.matched { border-color:var(--green); background:rgba(61,214,140,0.08); }
+.ind-card.wrong, .eng-card.wrong { border-color:var(--wrong); animation:shake 0.35s ease; }
+.ind-card.idle-glow, .eng-card.idle-glow { animation:cardglow 1.5s ease-in-out infinite; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-5px)} 60%{transform:translateX(5px)} }
+
+.card-icon { font-size:22px; flex-shrink:0; }
+.card-info { min-width:0; }
+.card-name { font-size:13px; font-weight:bold; color:var(--text); }
+.card-sub { font-size:11px; color:var(--dim); margin-top:2px; }
+
+.match-status {
+  text-align:center; font-size:14px; color:var(--dim);
+  padding:8px; background:var(--panel); border-radius:8px; width:100%; max-width:500px;
+}
+.match-status span { color:var(--green); font-weight:bold; font-size:16px; }
+
+/* ── RESULT ── */
+#s-result {
+  flex-direction:column; align-items:center; justify-content:center;
+  padding:40px 24px; gap:24px; text-align:center;
+}
+.result-title { font-size:clamp(28px,5vw,50px); font-weight:900; color:var(--green); letter-spacing:-1px; }
+.result-sub { font-size:14px; color:var(--dim); margin-top:-8px; }
+.score-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; max-width:680px; width:100%; }
+.score-card {
+  background:var(--panel); border:1px solid var(--border);
+  border-radius:10px; padding:20px 14px; text-align:center;
+}
+.score-icon { font-size:28px; margin-bottom:8px; }
+.score-label { font-size:11px; color:var(--dim); letter-spacing:2px; margin-bottom:6px; }
+.score-val { font-size:28px; font-weight:900; }
+.score-val.s { color:var(--green); }
+.score-val.a { color:var(--blue); }
+.score-val.b { color:var(--gold); }
+
+.result-compare {
+  background:rgba(61,214,140,0.07); border:1px solid rgba(61,214,140,0.25);
+  border-radius:10px; padding:20px 28px; max-width:640px; width:100%;
+}
+.compare-city { font-size:13px; color:var(--green); letter-spacing:2px; margin-bottom:8px; }
+.compare-text { font-size:15px; color:var(--text); line-height:1.8; }
+.compare-text strong { color:var(--gold); }
+
+.btn-next {
+  background:var(--green); color:#000; border:none;
+  font-size:15px; letter-spacing:3px; padding:16px 64px;
+  cursor:pointer; font-family:inherit; border-radius:4px;
+  font-weight:700; transition:all 0.2s;
+}
+.btn-next:hover { opacity:0.85; transform:scale(1.02); }
+
+/* ── NAV BUTTON ── */
+.btn-next-step {
+  background:transparent; border:2px solid var(--blue); color:var(--blue);
+  font-size:14px; letter-spacing:3px; padding:12px 48px;
+  cursor:pointer; font-family:inherit; border-radius:2px; transition:all 0.2s;
+}
+.btn-next-step:hover { background:var(--blue); color:#000; }
+.btn-back {
+  background:transparent; border:none; color:var(--dim);
+  font-size:13px; cursor:pointer; font-family:inherit;
+  letter-spacing:2px; padding:8px;
+}
+.btn-back:hover { color:var(--text); }
+
+/* ── STEP PROGRESS ── */
+.step-progress {
+  display:flex; gap:8px; align-items:center;
+}
+.sp-dot {
+  width:8px; height:8px; border-radius:50%;
+  background:var(--border); transition:all 0.3s;
+}
+.sp-dot.active { background:var(--blue); width:24px; border-radius:4px; }
+.sp-dot.done { background:var(--green); }
+
+/* ── REVEAL ANIMATION for result ── */
+@keyframes scoreup { 0%{opacity:0;transform:translateY(20px)} 100%{opacity:1;transform:none} }
+.score-card { animation:scoreup 0.5s ease both; }
+.score-card:nth-child(1){ animation-delay:0.1s }
+.score-card:nth-child(2){ animation-delay:0.2s }
+.score-card:nth-child(3){ animation-delay:0.3s }
+</style>
+</head>
+<body>
+
+<!-- 語言切換 -->
+<div id="lang-btn">
+  <button class="lang-opt active" onclick="setLang('zh')">繁中</button>
+  <button class="lang-opt" onclick="setLang('en')">EN</button>
+</div>
+<div id="lang-wip">
+  <div class="wip-box">
+    <div class="wip-icon">🚧</div>
+    <div class="wip-title">English Version</div>
+    <div class="wip-sub">多語言版本建設中<br>English translation coming soon</div>
+    <button class="wip-close" onclick="document.getElementById('lang-wip').classList.remove('show')">關閉 Close</button>
+  </div>
+</div>
+
+<!-- 閒置提示 -->
+<div id="idle-hint">👆 請點選一個選項繼續</div>
+
+<!-- ══ INTRO ══ -->
+<div id="s-intro" class="screen active">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;padding:40px 20px;text-align:center;min-height:100vh;">
+    <div class="intro-zone">ZONE · 03</div>
+    <div class="intro-title">電網轉骨</div>
+    <div class="intro-en">SMART SHIFT</div>
+    <div class="qcard" onclick="openReveal();sndClick()">
+      <div class="qcard-label">ZONE 2 解密</div>
+      <div class="qcard-q">？</div>
+      <div class="qcard-tap">點擊解密 →</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ REVEAL MODAL ══ -->
+<div id="reveal-modal" class="rmodal-overlay">
+  <div class="rmodal-card">
+    <div id="rmodal-step0" class="rmodal-step active">
+      <div class="rmodal-head">ZONE 2 解密</div>
+      <div class="rmodal-icon">🔍</div>
+      <div class="rmodal-title">電網規劃的三個關鍵</div>
+      <div class="rmodal-body">台電如何讓台灣在 AI 時代不斷電？答案藏在三個決策裡。</div>
+      <button class="rmodal-btn" onclick="revealNext();sndChime()">開始了解 →</button>
+    </div>
+    <div id="rmodal-step1" class="rmodal-step">
+      <div class="rmodal-num">01 / 03</div>
+      <div class="rmodal-icon">🏗️</div>
+      <div class="rmodal-title">電網建設，要<span class="rmodal-gold">提前 10 年</span></div>
+      <div class="rmodal-body">電力建設工期長達 10 年以上。等需求來了才動工，就會斷電。台電必須在需求爆量前超前布局。</div>
+      <button class="rmodal-btn" onclick="revealNext();sndClick()">下一個 →</button>
+    </div>
+    <div id="rmodal-step2" class="rmodal-step">
+      <div class="rmodal-num">02 / 03</div>
+      <div class="rmodal-icon">📍</div>
+      <div class="rmodal-title">位置，要<span class="rmodal-gold">選對</span></div>
+      <div class="rmodal-body">電網樞紐要靠近再生能源、靠近產業、降低輸電損耗。選錯位置，整座城市的電力效率都會下降。</div>
+      <button class="rmodal-btn" onclick="revealNext();sndClick()">下一個 →</button>
+    </div>
+    <div id="rmodal-step3" class="rmodal-step">
+      <div class="rmodal-num">03 / 03</div>
+      <div class="rmodal-icon">⚡</div>
+      <div class="rmodal-title">產業，要<span class="rmodal-gold">配對</span></div>
+      <div class="rmodal-body">半導體廠需要全天候穩定電力；住宅白天用電多、夜晚少。找對搭檔，才能讓每一度電零浪費。</div>
+      <button class="rmodal-btn" onclick="revealNext();sndClick()">了解了 →</button>
+    </div>
+    <div id="rmodal-step4" class="rmodal-step">
+      <div class="rmodal-icon">💡</div>
+      <div class="rmodal-conclusion">這，就是電網轉骨。</div>
+      <div class="rmodal-body">現在換你來規劃台灣下一座城市的電力未來。</div>
+      <button class="rmodal-btn rmodal-btn-go" onclick="closeRevealStart()">開始規劃 →</button>
+    </div>
+    <div class="rmodal-dots">
+      <div class="rdot" id="rdot-0"></div>
+      <div class="rdot" id="rdot-1"></div>
+      <div class="rdot" id="rdot-2"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ INSTRUCTIONS ══ -->
+<div id="s-instructions" class="screen">
+  <div style="display:flex;flex-direction:column;align-items:center;padding:36px 24px;gap:20px;width:100%;text-align:center;">
+    <div class="ins-zone">ZONE 03 · 電網轉骨</div>
+    <div class="ins-title">三步驟完成你的城市電力規劃</div>
+    <div class="ins-steps">
+      <div class="ins-step">
+        <div class="ins-num">STEP 01</div>
+        <div class="ins-icon">⏰</div>
+        <div class="ins-name">時間決策</div>
+        <div class="ins-en">TIME PLANNING</div>
+        <div class="ins-desc">電網建設最需要的是<strong>超前意識</strong>。你會在什麼時候開始動工？</div>
+      </div>
+      <div class="ins-step">
+        <div class="ins-num">STEP 02</div>
+        <div class="ins-icon">📍</div>
+        <div class="ins-name">位置選擇</div>
+        <div class="ins-en">LOCATION</div>
+        <div class="ins-desc">把電網樞紐蓋在哪裡，決定了整座城市的<strong>電力效率</strong>。</div>
+      </div>
+      <div class="ins-step">
+        <div class="ins-num">STEP 03</div>
+        <div class="ins-icon">⚡</div>
+        <div class="ins-name">產業配對</div>
+        <div class="ins-en">POWER COUPLE</div>
+        <div class="ins-desc">哪種產業配哪種電源？<strong>找對搭檔</strong>才能發揮最大效益。</div>
+      </div>
+    </div>
+    <div class="ins-note">
+      🟢 <strong>這關沒有時間限制</strong>，慢慢思考，找出最佳決策。<br>
+      每個步驟做完可以修改，最後確認再進入下一步。
+    </div>
+    <button class="btn-main" style="opacity:1;animation:none" onclick="startGame();sndChime()">開始規劃 →</button>
+  </div>
+</div>
+
+<!-- ══ STEP 1: 時間決策 ══ -->
+<div id="s-step1" class="screen step-wrap">
+  <div class="step-header">
+    <div class="step-num">STEP 01 / 03</div>
+    <div class="step-title">⏰ 你什麼時候開始建設電網？</div>
+    <div class="step-desc">一座 AI 科技城正在籌備，用電需求預估 10 年後爆量。<br>你決定從哪一年開始超前部署？</div>
+  </div>
+
+  <!-- Timeline -->
+  <div class="timeline-wrap">
+    <div class="timeline-label">
+      <span>2025</span><span>2028</span><span>2032</span><span>2035 需求爆量</span><span>2040</span>
+    </div>
+    <div class="timeline-bar">
+      <div class="timeline-demand"></div>
+    </div>
+  </div>
+
+  <div class="time-cards">
+    <div class="time-card" id="t-early" onclick="selectTime('early')">
+      <div class="time-year">2025</div>
+      <div class="time-icon">🏗️</div>
+      <div class="time-name">現在就建</div>
+      <div class="time-sub">需求還沒到也超前蓋好，電網先行</div>
+      <div class="time-tag tag-good">✅ 超前部署</div>
+    </div>
+    <div class="time-card" id="t-mid" onclick="selectTime('mid')">
+      <div class="time-year">2028</div>
+      <div class="time-icon">📋</div>
+      <div class="time-name">三年後再建</div>
+      <div class="time-sub">等需求略成形、較有把握時動工</div>
+      <div class="time-tag tag-mid">⚠️ 邊走邊看</div>
+    </div>
+    <div class="time-card" id="t-late" onclick="selectTime('late')">
+      <div class="time-year">2032</div>
+      <div class="time-icon">⏳</div>
+      <div class="time-name">確定有需求才建</div>
+      <div class="time-sub">節省前期成本，但趕工有斷電風險</div>
+      <div class="time-tag tag-risk">❗ 高風險</div>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+    <button id="btn-s1-next" class="btn-next-step" style="opacity:0.3;pointer-events:none" onclick="goStep2();sndChime()">確認，下一步 →</button>
+    <button class="btn-back" onclick="showScreen('s-instructions')">← 返回說明</button>
+  </div>
+  <div class="step-progress"><div class="sp-dot active"></div><div class="sp-dot"></div><div class="sp-dot"></div></div>
+</div>
+
+<!-- ══ STEP 2: 位置選擇 ══ -->
+<div id="s-step2" class="screen step-wrap">
+  <div class="step-header">
+    <div class="step-num">STEP 02 / 03</div>
+    <div class="step-title">📍 把電網樞紐蓋在哪裡？</div>
+    <div class="step-desc">綜合考量：再生能源距離、現有電網容量、產業密度，選一個最佳位置。</div>
+  </div>
+
+  <div class="map-wrap">
+    <!-- Taiwan SVG Map -->
+    <div class="taiwan-map-box">
+      <svg class="taiwan-svg" viewBox="0 0 220 320" xmlns="http://www.w3.org/2000/svg">
+        <!-- Taiwan island outline -->
+        <path d="M110,8 C120,8 138,14 148,28 C162,46 168,72 166,100 C164,128 158,155 152,178 C146,200 140,222 132,240 C122,260 112,280 100,295 C88,280 78,260 68,240 C58,220 50,198 46,176 C42,152 40,126 42,100 C44,72 52,46 66,28 C78,14 98,8 110,8Z"
+              fill="rgba(77,184,232,0.06)" stroke="rgba(77,184,232,0.3)" stroke-width="1.5"/>
+        <!-- 離岸風電（西部）indicator -->
+        <text x="12" y="150" font-size="9" fill="rgba(77,184,232,0.4)" font-family="sans-serif">💨</text>
+        <text x="8" y="160" font-size="7" fill="rgba(77,184,232,0.3)" font-family="sans-serif">離岸風電</text>
+
+        <!-- North marker - Taoyuan 桃園 -->
+        <g class="location-dot" id="dot-north" onclick="selectLocation('north')">
+          <circle cx="95" cy="52" r="12" fill="rgba(77,184,232,0.2)" stroke="var(--blue)" stroke-width="2"/>
+          <circle cx="95" cy="52" r="5" fill="var(--blue)"/>
+          <text x="95" y="40" text-anchor="middle" font-size="9" fill="var(--text)" font-family="sans-serif">桃園</text>
+        </g>
+
+        <!-- Central marker - Taichung 台中 -->
+        <g class="location-dot" id="dot-central" onclick="selectLocation('central')">
+          <circle cx="78" cy="148" r="12" fill="rgba(245,200,66,0.2)" stroke="var(--gold)" stroke-width="2"/>
+          <circle cx="78" cy="148" r="5" fill="var(--gold)"/>
+          <text x="78" y="136" text-anchor="middle" font-size="9" fill="var(--text)" font-family="sans-serif">台中</text>
+        </g>
+
+        <!-- South marker - Kaohsiung 高雄 -->
+        <g class="location-dot" id="dot-south" onclick="selectLocation('south')">
+          <circle cx="88" cy="248" r="12" fill="rgba(61,214,140,0.2)" stroke="var(--green)" stroke-width="2"/>
+          <circle cx="88" cy="248" r="5" fill="var(--green)"/>
+          <text x="88" y="236" text-anchor="middle" font-size="9" fill="var(--text)" font-family="sans-serif">高雄</text>
+        </g>
+      </svg>
+    </div>
+
+    <!-- Location Cards -->
+    <div class="location-cards">
+      <div class="loc-card" id="loc-north" onclick="selectLocation('north')">
+        <div class="loc-name">🔵 北部（桃園航空城）</div>
+        <div class="loc-stats">
+          <span class="loc-stat ok">再生能源 ▲遠</span>
+          <span class="loc-stat good">現有電網 ▲高</span>
+          <span class="loc-stat bad">土地成本 ▲高</span>
+          <span class="loc-stat good">產業密度 ▲高</span>
+        </div>
+      </div>
+      <div class="loc-card" id="loc-central" onclick="selectLocation('central')">
+        <div class="loc-name">🟡 中部（台中彰化）</div>
+        <div class="loc-stats">
+          <span class="loc-stat good">再生能源 ▲近（彰化風場）</span>
+          <span class="loc-stat ok">現有電網 ▲中</span>
+          <span class="loc-stat ok">土地成本 ▲中</span>
+          <span class="loc-stat ok">產業密度 ▲中</span>
+        </div>
+      </div>
+      <div class="loc-card" id="loc-south" onclick="selectLocation('south')">
+        <div class="loc-name">🟢 南部（高雄臨海）</div>
+        <div class="loc-stats">
+          <span class="loc-stat good">再生能源 ▲近（離岸風電）</span>
+          <span class="loc-stat ok">現有電網 ▲中</span>
+          <span class="loc-stat good">土地成本 ▲低</span>
+          <span class="loc-stat good">產業密度 ▲高</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+    <button id="btn-s2-next" class="btn-next-step" style="opacity:0.3;pointer-events:none" onclick="goStep3();sndChime()">確認，下一步 →</button>
+    <button class="btn-back" onclick="goStep1Back()">← 返回上一步</button>
+  </div>
+  <div class="step-progress"><div class="sp-dot done"></div><div class="sp-dot active"></div><div class="sp-dot"></div></div>
+</div>
+
+<!-- ══ STEP 3: 產業配對 ══ -->
+<div id="s-step3" class="screen step-wrap">
+  <div class="step-header">
+    <div class="step-num">STEP 03 / 03</div>
+    <div class="step-title">⚡ Power Couple：找出最佳配對！</div>
+    <div class="step-desc">點選左側產業，再點選右側最合適的電源，完成 4 組配對。</div>
+  </div>
+
+  <div class="couple-wrap">
+    <div class="couple-grid">
+      <!-- Industries -->
+      <div>
+        <div class="couple-col-label">🏭 產業</div>
+        <div class="couple-col" id="ind-col">
+          <div class="ind-card" id="ind-aidc" onclick="selectInd('aidc')">
+            <div class="card-icon">🤖</div>
+            <div class="card-info"><div class="card-name">AI 資料中心</div><div class="card-sub">全天候穩定、彈性需求</div></div>
+          </div>
+          <div class="ind-card" id="ind-semi" onclick="selectInd('semi')">
+            <div class="card-icon">🏗</div>
+            <div class="card-info"><div class="card-name">半導體廠</div><div class="card-sub">24小時不中斷生產</div></div>
+          </div>
+          <div class="ind-card" id="ind-res" onclick="selectInd('res')">
+            <div class="card-icon">🏙</div>
+            <div class="card-info"><div class="card-name">住宅商業區</div><div class="card-sub">白天尖峰、夜間低谷</div></div>
+          </div>
+          <div class="ind-card" id="ind-green" onclick="selectInd('green')">
+            <div class="card-icon">🌿</div>
+            <div class="card-info"><div class="card-name">綠色製造業</div><div class="card-sub">低碳要求、需求穩定</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Center connection display -->
+      <div class="couple-center">
+        <div id="pair-display" style="display:flex;flex-direction:column;gap:8px;align-items:center;">
+          <div class="pair-slot" id="pair-aidc" style="font-size:11px;color:var(--dim);padding:4px 0;">— 未配對 —</div>
+          <div class="pair-slot" id="pair-semi" style="font-size:11px;color:var(--dim);padding:4px 0;">— 未配對 —</div>
+          <div class="pair-slot" id="pair-res" style="font-size:11px;color:var(--dim);padding:4px 0;">— 未配對 —</div>
+          <div class="pair-slot" id="pair-green" style="font-size:11px;color:var(--dim);padding:4px 0;">— 未配對 —</div>
+        </div>
+      </div>
+
+      <!-- Energy sources -->
+      <div>
+        <div class="couple-col-label">⚡ 電源</div>
+        <div class="couple-col" id="eng-col">
+          <div class="eng-card" id="eng-vpp" onclick="selectEng('vpp')">
+            <div class="card-icon">🔗</div>
+            <div class="card-info"><div class="card-name">VPP 虛擬電廠</div><div class="card-sub">靈活調度、需量反應</div></div>
+          </div>
+          <div class="eng-card" id="eng-storage" onclick="selectEng('storage')">
+            <div class="card-icon">🔋</div>
+            <div class="card-info"><div class="card-name">大型儲能</div><div class="card-sub">穩定供電、不中斷</div></div>
+          </div>
+          <div class="eng-card" id="eng-solar" onclick="selectEng('solar')">
+            <div class="card-icon">☀️</div>
+            <div class="card-info"><div class="card-name">太陽能</div><div class="card-sub">白天充足、夜間歸零</div></div>
+          </div>
+          <div class="eng-card" id="eng-wind" onclick="selectEng('wind')">
+            <div class="card-icon">💨</div>
+            <div class="card-info"><div class="card-name">離岸風電</div><div class="card-sub">穩定低碳、24小時</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="match-status">已配對：<span id="match-count">0</span> / 4 組</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+    <button id="btn-s3-next" class="btn-next-step" style="opacity:0.3;pointer-events:none" onclick="showResult();sndSuccess()">查看結果 →</button>
+    <button class="btn-back" onclick="goStep2Back()">← 返回上一步</button>
+  </div>
+  <div class="step-progress"><div class="sp-dot done"></div><div class="sp-dot done"></div><div class="sp-dot active"></div></div>
+</div>
+
+<!-- ══ RESULT ══ -->
+<div id="s-result" class="screen">
+  <div style="display:flex;flex-direction:column;align-items:center;padding:40px 24px;gap:22px;width:100%;text-align:center;">
+    <div class="result-title" id="result-title">🏙 城市電力藍圖完成！</div>
+    <div class="result-sub" id="result-sub">你的三項決策已建立城市電力基礎</div>
+
+    <div class="score-grid">
+      <div class="score-card">
+        <div class="score-icon">🏆</div>
+        <div class="score-label">城市競爭力</div>
+        <div class="score-val" id="sc-comp">—</div>
+      </div>
+      <div class="score-card">
+        <div class="score-icon">⚡</div>
+        <div class="score-label">電網穩定度</div>
+        <div class="score-val" id="sc-grid">—</div>
+      </div>
+      <div class="score-card">
+        <div class="score-icon">🌿</div>
+        <div class="score-label">碳排表現</div>
+        <div class="score-val" id="sc-carbon">—</div>
+      </div>
+    </div>
+
+    <div class="result-compare">
+      <div class="compare-city">📍 對照：高雄臨海工業區 2018 年真實決策</div>
+      <div class="compare-text" id="compare-text">
+        台電在 2018 年選擇<strong>超前部署電網</strong>、落腳<strong>高雄臨海</strong>、以<strong>離岸風電配對綠色製造業</strong>。<br>
+        現在高雄是台灣 AI 產業電力最穩定的城市之一。<br><br>
+        <span id="compare-match">你的決策與高雄方向吻合度：</span><strong id="match-pct" style="color:var(--green);font-size:20px;">—</strong>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;justify-content:center;">
+      <button class="btn-next" onclick="showScreen('s-poc');sndChime()">前往實戰案例 →</button>
+      <button class="btn-back" onclick="resetGame()">↺ 重新規劃</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ POC: 實戰案例 ══ -->
+<div id="s-poc" class="screen">
+  <div style="display:flex;flex-direction:column;align-items:center;padding:40px 24px;gap:24px;width:100%;">
+    <div class="poc-label">實戰案例 · PROOF OF CONCEPT</div>
+    <div class="poc-title">台電高雄臨海工業區<br>電網超前部署計畫</div>
+    <div class="poc-grid">
+      <div class="poc-card">
+        <div class="poc-num">決策 01</div>
+        <div class="poc-topic">時間</div>
+        <div class="poc-answer">2018 年動工<br><span>比需求爆量早 7 年部署</span></div>
+        <div class="poc-result">✅ 2025 年如期供電，零斷電</div>
+      </div>
+      <div class="poc-card">
+        <div class="poc-num">決策 02</div>
+        <div class="poc-topic">位置</div>
+        <div class="poc-answer">高雄臨海工業區<br><span>緊鄰離岸風場、腹地充裕</span></div>
+        <div class="poc-result">✅ 345kV 超高壓輸電損耗最小化</div>
+      </div>
+      <div class="poc-card">
+        <div class="poc-num">決策 03</div>
+        <div class="poc-topic">配對</div>
+        <div class="poc-answer">離岸風電 × 綠色製造<br><span>VPP 虛擬電廠 × AI 資料中心</span></div>
+        <div class="poc-result">✅ 再生能源佔比達 42%</div>
+      </div>
+    </div>
+    <div class="poc-quote">
+      「電力建設不能追著需求跑，要引領需求。超前 10 年的決策，換來城市 30 年的競爭力。」<br>
+      <span>— 台電輸電建設規劃原則</span>
+    </div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center;">
+      <button class="btn-back" onclick="resetGame()">↺ 重新規劃一次</button>
+    </div>
+  </div>
+</div>
+
+<script>
+
+// ══════════════════════════════════════════
+//  REVEAL MODAL
+// ══════════════════════════════════════════
+var revealStep = 0;
+function openReveal() {
+  revealStep = -1;
+  document.getElementById('reveal-modal').classList.add('show');
+  revealNext();
+}
+function revealNext() {
+  revealStep++;
+  document.querySelectorAll('.rmodal-step').forEach(function(s){ s.classList.remove('active'); });
+  var el = document.getElementById('rmodal-step' + revealStep);
+  if (el) el.classList.add('active');
+  // dots: steps 1-3 light up dots 0-2
+  document.querySelectorAll('.rdot').forEach(function(d,i){
+    d.classList.toggle('active', i < revealStep);
+  });
+}
+function closeRevealStart() {
+  document.getElementById('reveal-modal').classList.remove('show');
+  startGame();
+  sndChime();
+}
+
+// ══════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════
+var timeChoice = null;
+var locChoice  = null;
+var pairs      = {};        // { indId: engId }
+var selectedInd = null;
+var selectedEng = null;
+var matchCount  = 0;
+
+var idleTimer   = null;
+var idleLevel   = 0;
+var autoReset   = null;
+
+var CORRECT = { aidc:'vpp', semi:'storage', res:'solar', green:'wind' };
+
+// ══════════════════════════════════════════
+//  AUDIO (Web Audio API)
+// ══════════════════════════════════════════
+var audioCtx = null;
+function getAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+function playTone(freq, dur, type, vol) {
+  try {
+    var ctx = getAudio();
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = type || 'sine'; osc.frequency.value = freq;
+    gain.gain.setValueAtTime(vol||0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    osc.start(); osc.stop(ctx.currentTime + dur);
+  } catch(e){}
+}
+function sndClick() { playTone(660, 0.12, 'sine', 0.12); }
+function sndChime() {
+  [528,660,792].forEach(function(f,i){
+    setTimeout(function(){ playTone(f, 0.3, 'sine', 0.12); }, i*100);
+  });
+}
+function sndMatch() {
+  [440,554,659].forEach(function(f,i){
+    setTimeout(function(){ playTone(f, 0.4, 'sine', 0.13); }, i*80);
+  });
+}
+function sndWrong() { playTone(200, 0.3, 'sawtooth', 0.08); }
+function sndSuccess() {
+  [528,660,792,880].forEach(function(f,i){
+    setTimeout(function(){ playTone(f, 0.5, 'sine', 0.13); }, i*120);
+  });
+}
+function sndIdle() { playTone(440, 0.2, 'sine', 0.07); }
+
+// ══════════════════════════════════════════
+//  IDLE TIMER
+// ══════════════════════════════════════════
+function resetIdle() {
+  clearTimeout(idleTimer);
+  clearTimeout(autoReset);
+  idleLevel = 0;
+  document.getElementById('idle-hint').classList.remove('show');
+  document.querySelectorAll('.time-card,.loc-card,.ind-card,.eng-card').forEach(function(el){
+    el.classList.remove('idle-glow');
+  });
+  document.querySelectorAll('.location-dot').forEach(function(el){
+    el.classList.remove('idle-glow');
+  });
+  scheduleIdle();
+}
+function scheduleIdle() {
+  idleTimer = setTimeout(function(){
+    idleLevel = 1;
+    // Level 1: elements glow
+    document.querySelectorAll('.time-card:not(.selected),.loc-card:not(.selected),.ind-card:not(.matched),.eng-card:not(.matched)').forEach(function(el){
+      el.classList.add('idle-glow');
+    });
+    document.querySelectorAll('.location-dot').forEach(function(el){
+      el.classList.add('idle-glow');
+    });
+    sndIdle();
+    idleTimer = setTimeout(function(){
+      // Level 2: text hint
+      document.getElementById('idle-hint').classList.add('show');
+      idleTimer = setTimeout(function(){
+        // Level 3: auto reset to intro
+        showScreen('s-intro');
+        resetIdle();
+      }, 20000);
+    }, 10000);
+  }, 15000);
+}
+document.addEventListener('click', resetIdle);
+document.addEventListener('touchstart', resetIdle);
+
+// Auto reset after result shown
+function startAutoReset() {
+  autoReset = setTimeout(function(){
+    resetGame();
+  }, 60000);
+}
+
+// ══════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+}
+function setLang(lang) {
+  document.querySelectorAll('.lang-opt').forEach(function(b){ b.classList.remove('active'); });
+  if (lang === 'en') {
+    document.querySelector('.lang-opt:last-child').classList.add('active');
+    document.getElementById('lang-wip').classList.add('show');
+  } else {
+    document.querySelector('.lang-opt:first-child').classList.add('active');
+  }
+}
+function startGame() { showScreen('s-step1'); resetIdle(); }
+
+function goStep2() {
+  showScreen('s-step2');
+  resetIdle();
+}
+function goStep1Back() { showScreen('s-step1'); resetIdle(); }
+function goStep3() { showScreen('s-step3'); resetIdle(); }
+function goStep2Back() { showScreen('s-step2'); resetIdle(); }
+
+function resetGame() {
+  timeChoice = null; locChoice = null; pairs = {}; selectedInd = null; selectedEng = null; matchCount = 0;
+  document.querySelectorAll('.time-card').forEach(function(c){ c.classList.remove('selected'); });
+  document.querySelectorAll('.loc-card').forEach(function(c){ c.classList.remove('selected'); });
+  document.querySelectorAll('.location-dot').forEach(function(d){ d.classList.remove('selected'); });
+  document.querySelectorAll('.ind-card,.eng-card').forEach(function(c){ c.classList.remove('selected','matched','wrong'); });
+  document.querySelectorAll('.pair-slot').forEach(function(s){ s.textContent='— 未配對 —'; s.style.color='var(--dim)'; });
+  document.getElementById('match-count').textContent = '0';
+  document.getElementById('btn-s1-next').style.opacity='0.3'; document.getElementById('btn-s1-next').style.pointerEvents='none';
+  document.getElementById('btn-s2-next').style.opacity='0.3'; document.getElementById('btn-s2-next').style.pointerEvents='none';
+  document.getElementById('btn-s3-next').style.opacity='0.3'; document.getElementById('btn-s3-next').style.pointerEvents='none';
+  showScreen('s-intro');
+  resetIdle();
+}
+
+// ══════════════════════════════════════════
+//  STEP 1: TIME
+// ══════════════════════════════════════════
+function selectTime(choice) {
+  timeChoice = choice;
+  document.querySelectorAll('.time-card').forEach(function(c){ c.classList.remove('selected','idle-glow'); });
+  document.getElementById('t-'+choice).classList.add('selected');
+  sndClick();
+  var btn = document.getElementById('btn-s1-next');
+  btn.style.opacity='1'; btn.style.pointerEvents='auto';
+  resetIdle();
+}
+
+// ══════════════════════════════════════════
+//  STEP 2: LOCATION
+// ══════════════════════════════════════════
+function selectLocation(loc) {
+  locChoice = loc;
+  document.querySelectorAll('.loc-card').forEach(function(c){ c.classList.remove('selected','idle-glow'); });
+  document.querySelectorAll('.location-dot').forEach(function(d){ d.classList.remove('selected','idle-glow'); });
+  document.getElementById('loc-'+loc).classList.add('selected');
+  document.getElementById('dot-'+loc).classList.add('selected');
+  sndClick();
+  var btn = document.getElementById('btn-s2-next');
+  btn.style.opacity='1'; btn.style.pointerEvents='auto';
+  resetIdle();
+}
+
+// ══════════════════════════════════════════
+//  STEP 3: POWER COUPLE
+// ══════════════════════════════════════════
+function selectInd(id) {
+  if (pairs[id]) return; // already matched
+  if (selectedInd === id) { // deselect
+    document.getElementById('ind-'+id).classList.remove('selected');
+    selectedInd = null; return;
+  }
+  document.querySelectorAll('.ind-card').forEach(function(c){ if (!c.classList.contains('matched')) c.classList.remove('selected'); });
+  selectedInd = id;
+  document.getElementById('ind-'+id).classList.add('selected');
+  sndClick();
+  if (selectedEng) tryMatch();
+}
+function selectEng(id) {
+  var alreadyUsed = Object.values(pairs).indexOf(id) >= 0;
+  if (alreadyUsed) return;
+  if (selectedEng === id) {
+    document.getElementById('eng-'+id).classList.remove('selected');
+    selectedEng = null; return;
+  }
+  document.querySelectorAll('.eng-card').forEach(function(c){ if (!c.classList.contains('matched')) c.classList.remove('selected'); });
+  selectedEng = id;
+  document.getElementById('eng-'+id).classList.add('selected');
+  sndClick();
+  if (selectedInd) tryMatch();
+}
+function tryMatch() {
+  var ind = selectedInd; var eng = selectedEng;
+  selectedInd = null; selectedEng = null;
+  var correct = CORRECT[ind] === eng;
+  if (correct) {
+    pairs[ind] = eng;
+    document.getElementById('ind-'+ind).classList.remove('selected'); document.getElementById('ind-'+ind).classList.add('matched');
+    document.getElementById('eng-'+eng).classList.remove('selected'); document.getElementById('eng-'+eng).classList.add('matched');
+    var slot = document.getElementById('pair-'+ind);
+    var engNames = {vpp:'VPP 虛擬電廠',storage:'大型儲能',solar:'太陽能',wind:'離岸風電'};
+    slot.textContent = '✅ ' + engNames[eng];
+    slot.style.color = 'var(--green)';
+    matchCount++;
+    document.getElementById('match-count').textContent = matchCount;
+    sndMatch();
+    if (matchCount === 4) {
+      var btn = document.getElementById('btn-s3-next');
+      btn.style.opacity='1'; btn.style.pointerEvents='auto';
+    }
+  } else {
+    document.getElementById('ind-'+ind).classList.add('wrong');
+    document.getElementById('eng-'+eng).classList.add('wrong');
+    sndWrong();
+    setTimeout(function(){
+      document.getElementById('ind-'+ind).classList.remove('wrong','selected');
+      document.getElementById('eng-'+eng).classList.remove('wrong','selected');
+    }, 600);
+  }
+  resetIdle();
+}
+
+// ══════════════════════════════════════════
+//  RESULT
+// ══════════════════════════════════════════
+function showResult() {
+  // Calculate scores
+  var timeScore  = timeChoice==='early' ? 'S' : timeChoice==='mid' ? 'A' : 'B';
+  var locScore   = locChoice==='south' ? 'S' : locChoice==='central' ? 'A' : 'B';
+  var coupleScore = matchCount===4 ? 'S' : matchCount>=2 ? 'A' : 'B';
+
+  // Grid stability from time, competitiveness from location, carbon from couple
+  document.getElementById('sc-comp').textContent = locScore;
+  document.getElementById('sc-comp').className = 'score-val ' + locScore.toLowerCase();
+  document.getElementById('sc-grid').textContent = timeScore;
+  document.getElementById('sc-grid').className = 'score-val ' + timeScore.toLowerCase();
+  document.getElementById('sc-carbon').textContent = coupleScore;
+  document.getElementById('sc-carbon').className = 'score-val ' + coupleScore.toLowerCase();
+
+  // Match percentage vs Kaohsiung (correct = early + south + all correct)
+  var pts = (timeChoice==='early'?1:0) + (locChoice==='south'?1:0) + (matchCount===4?1:0);
+  var pct = Math.round(pts/3*100);
+  document.getElementById('match-pct').textContent = pct + '%';
+
+  if (pts === 3) {
+    document.getElementById('result-title').textContent = '🏆 完美規劃！和台電一樣的選擇！';
+    document.getElementById('result-sub').textContent = '你的三項決策與高雄的真實方案完全吻合！';
+  } else if (pts >= 2) {
+    document.getElementById('result-title').textContent = '🌟 優秀規劃！';
+    document.getElementById('result-sub').textContent = '你的決策大方向正確，有一步可以更優化。';
+  } else {
+    document.getElementById('result-title').textContent = '💡 完成規劃！';
+    document.getElementById('result-sub').textContent = '看看台電的真實決策，有什麼不同？';
+  }
+
+  showScreen('s-result');
+  startAutoReset();
+}
+
+// ── INIT ──
+scheduleIdle();
+</script>
+</body>
+</html>
